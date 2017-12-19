@@ -19,7 +19,8 @@ def quantize(data, target_bits):
     bin_width = (max_value - min_value) / (1 << target_bits)
 
     data_type = resolve_integer_type(target_bits)
-    return np.array([np.binary_repr(((value - min_value) // bin_width).astype(data_type) if value < max_value else (1 << target_bits) - 1, width=target_bits) for value in data]), min_value, max_value
+    greatest_bin_number = (1 << target_bits) - 1
+    return np.array([np.binary_repr(((value - min_value) // bin_width).astype(data_type) if value < max_value else greatest_bin_number, width=target_bits) for value in data]), min_value, max_value
 
 
 def dequantize(data, source_bits, min_value, max_value):
