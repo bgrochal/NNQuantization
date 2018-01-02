@@ -6,10 +6,10 @@ from tensorflow.contrib import slim
 
 import bin_quantization
 import fixed_point_quantization
-from models.research.slim.nets import inception
+from models.research.slim.nets import resnet_v1
 
 
-def perform_quantization(checkpoint_file_path, classes, quantization_algorithm, quantization_bits):
+def perform_quantization(resnet_model, checkpoint_file_path, classes, quantization_algorithm, quantization_bits):
     """
     Loads the TensorFlow Slim model and variables contained in the checkpoint file, and then performs a quantization and
     dequantization of trainable variables (i.e. weights and batch norms). Finally, new values of the trainable variables
@@ -19,12 +19,22 @@ def perform_quantization(checkpoint_file_path, classes, quantization_algorithm, 
     with tf.Graph().as_default():
         global_step = tf.train.get_or_create_global_step()  # needed by the Saver mechanism
 
-        # MODEL CREATION
-        image_size = inception.inception_v1.default_image_size
+        # RESNET V1 50 MODEL
+        if resnet_model == 50:
+            image_size = resnet_v1.resnet_v1_50.default_image_size
+            with slim.arg_scope(resnet_v1.resnet_arg_scope()):
+                resnet_v1.resnet_v1_50(np.zeros((64, image_size, image_size, 3), np.float32),
+                                       num_classes=classes, is_training=False)
+        # RESNET V1 101 MODEL
+        elif resnet_model == 101:
+            image_size = resnet_v1.resnet_v1_101.default_image_size
+            with slim.arg_scope(resnet_v1.resnet_arg_scope()):
+                resnet_v1.resnet_v1_101(np.zeros((64, image_size, image_size, 3), np.float32),
+                                        num_classes=classes, is_training=False)
+        # NOT RECOGNIZED MODEL
+        else:
+            raise Exception('Model type not recognized.')
 
-        with slim.arg_scope(inception.inception_v1_arg_scope()):
-            inception.inception_v1(np.zeros((64, image_size, image_size, 3), np.float32),
-                                   num_classes=classes, is_training=False)
         init_function = slim.assign_from_checkpoint_fn(checkpoint_file_path, slim.get_model_variables())
 
         with tf.Session() as session:
@@ -117,8 +127,8 @@ def calculate_relative_error(calculated, reference):
 
 
 def main():
-    perform_quantization(checkpoint_file_path=sys.argv[1], classes=int(sys.argv[2]),
-                         quantization_algorithm=int(sys.argv[3]), quantization_bits=int(sys.argv[4]))
+    perform_quantization(resnet_model=int(sys.argv[1]), checkpoint_file_path=sys.argv[2], classes=int(sys.argv[3]),
+                         quantization_algorithm=int(sys.argv[4]), quantization_bits=int(sys.argv[5]))
 
 
 if __name__ == '__main__':
