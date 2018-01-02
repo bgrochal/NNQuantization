@@ -71,4 +71,4 @@ def dequantize(data, shift_positions, fractional_part_width, has_sign):
 
     shift_value = 10 ** -shift_positions
     fractional_multiplier = 2 ** -fractional_part_width
-    return np.array([represent_decimal(value) * fractional_multiplier * shift_value for value in data])
+    return np.array([represent_decimal(value) * fractional_multiplier * shift_value for value in data]).astype(np.float32)

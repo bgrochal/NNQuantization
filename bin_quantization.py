@@ -28,4 +28,4 @@ def dequantize(data, source_bits, min_value, max_value):
     Returns centers of all bins being the values defined in data.
     """
     bin_width = (max_value - min_value) / (1 << source_bits)
-    return [min_value + (int(value, 2) + 0.5) * bin_width for value in data]
+    return np.array([min_value + (int(value, 2) + 0.5) * bin_width for value in data]).astype(np.float32)
